@@ -7,5 +7,9 @@ module.exports = {
     precommit: 'nps care',
     care: 'nps build lint',
     dry: 'twly --boring --lines 3',
+    grep: {
+      // assumes usage of ripgrep
+      logs: 'rg "console.log" | node scripts/flume.js',
+    },
   },
 }
