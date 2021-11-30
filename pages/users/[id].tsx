@@ -89,6 +89,8 @@ export default function User({
   weeklyMetrics,
   metricsConfig,
 }: Props) {
+  // eslint-disable-next-line no-console
+  console.log('USER', user)
   // Recent Activity hooks
   const { $events, $hasPrevious, $hasNext, fetchPrevious, fetchNext } =
     usePaginatedEvents(user.id.toString(), EVENTS_LIMIT, events)
