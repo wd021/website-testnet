@@ -44,41 +44,50 @@ function displayEventType(type: API.EventType): string {
 }
 
 export const getServerSideProps: GetServerSideProps<Props> = async context => {
-  if (typeof context.query.id !== 'string') {
-    return {
-      notFound: true,
+  try {
+    if (typeof context.query.id !== 'string') {
+      return {
+        notFound: true,
+      }
     }
-  }
+    // eslint-disable-next-line
+    console.log('requesting...')
+    const [user, events, allTimeMetrics, weeklyMetrics, metricsConfig] =
+      await Promise.all([
+        API.getUser(context.query.id),
+        API.listEvents({ userId: context.query.id, limit: EVENTS_LIMIT }),
+        API.getUserAllTimeMetrics(context.query.id),
+        API.getUserWeeklyMetrics(context.query.id),
+        API.getMetricsConfig(),
+      ])
 
-  const [user, events, allTimeMetrics, weeklyMetrics, metricsConfig] =
-    await Promise.all([
-      API.getUser(context.query.id),
-      API.listEvents({ userId: context.query.id, limit: EVENTS_LIMIT }),
-      API.getUserAllTimeMetrics(context.query.id),
-      API.getUserWeeklyMetrics(context.query.id),
-      API.getMetricsConfig(),
-    ])
-
-  if (
-    'error' in events ||
-    'error' in user ||
-    'error' in allTimeMetrics ||
-    'error' in weeklyMetrics ||
-    'error' in metricsConfig
-  ) {
-    return {
-      notFound: true,
+    // eslint-disable-next-line
+    console.log({ user, events, allTimeMetrics, weeklyMetrics, metricsConfig })
+    if (
+      'error' in events ||
+      'error' in user ||
+      'error' in allTimeMetrics ||
+      'error' in weeklyMetrics ||
+      'error' in metricsConfig
+    ) {
+      return {
+        notFound: true,
+      }
     }
-  }
 
-  return {
-    props: {
-      events: events,
-      user: user,
-      allTimeMetrics: allTimeMetrics,
-      weeklyMetrics: weeklyMetrics,
-      metricsConfig: metricsConfig,
-    },
+    return {
+      props: {
+        events: events,
+        user: user,
+        allTimeMetrics: allTimeMetrics,
+        weeklyMetrics: weeklyMetrics,
+        metricsConfig: metricsConfig,
+      },
+    }
+  } catch (e) {
+    // eslint-disable-next-line
+    console.warn(e)
+    return { notFound: true }
   }
 }
 
