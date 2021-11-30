@@ -78,6 +78,10 @@ export function useLogin(config: LoginProps = {}) {
         $setMetadata(details)
         $setMagicMetadata(magicMd)
       } catch (err) {
+        if (err.toString().indexOf('-32603') > -1) {
+          $setStatus(STATUS.NOT_FOUND)
+          return
+        }
         // eslint-disable-next-line no-console
         console.warn('error getting id', err)
         throw err

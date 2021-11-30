@@ -2,6 +2,7 @@ import React from 'react'
 import { GetServerSideProps } from 'next'
 import Head from 'next/head'
 
+import Debug from 'components/Debug'
 import Footer from 'components/Footer'
 import Navbar from 'components/Navbar'
 import { Container as OffsetBorderContainer } from 'components/OffsetBorder'
@@ -20,7 +21,7 @@ const EVENTS_LIMIT = 7
 
 type Props = {
   events: API.ListEventsResponse
-  user: API.ApiUser
+  user?: API.ApiUser
   allTimeMetrics: API.UserMetricsResponse
   weeklyMetrics: API.UserMetricsResponse
   metricsConfig: API.MetricsConfigResponse
@@ -100,15 +101,23 @@ export default function User({
 }: Props) {
   // eslint-disable-next-line no-console
   console.log('USER', user)
+  const id = (user && user.id && user.id.toString()) || 'unknown'
   // Recent Activity hooks
   const { $events, $hasPrevious, $hasNext, fetchPrevious, fetchNext } =
-    usePaginatedEvents(user.id.toString(), EVENTS_LIMIT, events)
+    usePaginatedEvents(id, EVENTS_LIMIT, events)
 
   // Tab hooks
   const [$activeTab, $setActiveTab] = React.useState<TabType>('weekly')
   const onTabChange = React.useCallback((tab: TabType) => {
     $setActiveTab(tab)
   }, [])
+  if (!user || id === 'unknown') {
+    return (
+      <Debug
+        {...{ events, user, allTimeMetrics, weeklyMetrics, metricsConfig }}
+      />
+    )
+  }
 
   return (
     <LoginContext.Consumer>
