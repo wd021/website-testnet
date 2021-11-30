@@ -51,8 +51,6 @@ export const getServerSideProps: GetServerSideProps<Props> = async context => {
         notFound: true,
       }
     }
-    // eslint-disable-next-line
-    console.log('requesting...')
     const [user, events, allTimeMetrics, weeklyMetrics, metricsConfig] =
       await Promise.all([
         API.getUser(context.query.id),
@@ -61,9 +59,11 @@ export const getServerSideProps: GetServerSideProps<Props> = async context => {
         API.getUserWeeklyMetrics(context.query.id),
         API.getMetricsConfig(),
       ])
-
     // eslint-disable-next-line
-    console.log({ user, events, allTimeMetrics, weeklyMetrics, metricsConfig })
+    const fUser = user as any
+    if (!fUser || (fUser && !fUser.id)) {
+      return { notFound: true }
+    }
     if (
       'error' in events ||
       'error' in user ||
@@ -100,7 +100,6 @@ export default function User({
   metricsConfig,
 }: Props) {
   // eslint-disable-next-line no-console
-  console.log('USER', user)
   const id = (user && user.id && user.id.toString()) || 'unknown'
   // Recent Activity hooks
   const { $events, $hasPrevious, $hasNext, fetchPrevious, fetchNext } =
