@@ -78,6 +78,12 @@ export function useLogin(config: LoginProps = {}) {
         $setMetadata(details)
         $setMagicMetadata(magicMd)
       } catch (err) {
+        // eslint-disable-next-line
+        console.log({
+          CATCHER: true,
+          error: err.toString(),
+          matches: err.toString().indexOf('-32603'),
+        })
         if (err.toString().indexOf('-32603') > -1) {
           $setStatus(STATUS.NOT_FOUND)
           return
