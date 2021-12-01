@@ -1,9 +1,9 @@
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect } from 'react'
 import Router from 'next/router'
 import { magic, MagicUserMetadata } from 'utils/magic'
 import { ApiUserMetadata, ApiError, LocalError } from 'apiClient'
 import { getUserDetails } from 'apiClient/client'
-import { encode as btoa } from 'base-64'
+// import { encode as btoa } from 'base-64'
 
 export enum STATUS {
   LOADING = 'loading',
@@ -43,7 +43,13 @@ export function useLogin(config: LoginProps = {}) {
         }
         // check if we're logged in and fetch token with one call
         // magic.user.isLoggedIn makes this same call anyway
-        const token = await magic.user.getIdToken()
+        let token
+        try {
+          token = await magic.user.getIdToken()
+        } catch (error) {
+          // eslint-disable-next-line no-console
+          console.warn(error)
+        }
 
         if (!token) {
           if (typeof redirect === 'string') {
@@ -90,7 +96,7 @@ export function useLogin(config: LoginProps = {}) {
         console.log({
           CATCHER: true,
           error: err.toString(),
-          matches: err.toString().indexOf('-32603'),
+          notAValidUser: err.toString().indexOf('-32603') > -1,
         })
         if (err.toString().indexOf('-32603') > -1) {
           $setStatus(STATUS.NOT_FOUND)
