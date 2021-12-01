@@ -48,20 +48,23 @@ export function useLogin(config: LoginProps = {}) {
           token = await magic.user.getIdToken()
         } catch (error) {
           // eslint-disable-next-line no-console
-          console.warn(error)
+          console.warn('magic.user.getIdToken error:', error)
         }
 
         if (!token) {
+          // eslint-disable-next-line no-console
+          console.log('NO TOKEN FOUND')
           if (typeof redirect === 'string') {
             // eslint-disable-next-line no-console
             console.log('redirecting...')
+            // eslint-disable-next-line
+            debugger
             // if redirect string is provided and we're not logged in, cya!
             Router.push(redirect)
             return
           }
           $setStatus(STATUS.NOT_FOUND)
-          // this is a visible error but not a breaking error
-          $setError(new LocalError('No token available.', 500))
+          Promise.reject(new LocalError('No token available.', 500))
           return
         }
         // eslint-disable-next-line no-console
