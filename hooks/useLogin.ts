@@ -33,27 +33,28 @@ export function useLogin(config: LoginProps = {}) {
   const [$metadata, $setMetadata] = useState<ApiUserMetadata | null>(null)
   useEffect(() => {
     const checkLoggedIn = async () => {
+      // eslint-disable-next-line no-console
+      console.log('starting check!')
       try {
-        // eslint-disable-next-line no-console
-        console.log('starting check!')
         // this is likely a case where we're working in not-the-browser
         if ($metadata || !magic || !magic.user) {
-          throw new LocalError('Magic instance not available!', 500)
+          Promise.reject(new LocalError('Magic instance not available!', 500))
+          return
         }
-
         // check if we're logged in and fetch token with one call
         // magic.user.isLoggedIn makes this same call anyway
         const token = await magic.user.getIdToken()
 
-        if (!token && typeof redirect === 'string') {
-          // eslint-disable-next-line no-console
-          console.log('redirecting...')
-          // if redirect string is provided and we're not logged in, cya!
-          Router.push(redirect)
-          return
-        }
         if (!token) {
+          if (typeof redirect === 'string') {
+            // eslint-disable-next-line no-console
+            console.log('redirecting...')
+            // if redirect string is provided and we're not logged in, cya!
+            Router.push(redirect)
+            return
+          }
           $setStatus(STATUS.NOT_FOUND)
+          // this is a visible error but not a breaking error
           $setError(new LocalError('No token available.', 500))
           return
         }
@@ -62,15 +63,15 @@ export function useLogin(config: LoginProps = {}) {
         const [magicMd, details] = await Promise.all([
           magic.user.getMetadata(),
           getUserDetails(token),
-        ]).catch(e => {
-          throw e
-        })
+        ])
 
         if ('error' in details || details instanceof LocalError) {
           // eslint-disable-next-line no-console
           console.log('error!', details)
           $setStatus(STATUS.FAILED)
+          // this is a visible error and a breaking error
           $setError(details)
+          Promise.reject(details)
           return
         }
         if (details.statusCode && details.statusCode === 401) {
