@@ -35,14 +35,12 @@ export function useLogin(config: LoginProps = {}) {
     const checkLoggedIn = async () => {
       // eslint-disable-next-line no-console
       console.log('starting check!')
+      // this is likely a case where we're working in not-the-browser
+      if ($metadata || !magic || !magic.user) {
+        Promise.reject(new LocalError('Magic instance not available!', 500))
+        return
+      }
       try {
-        // this is likely a case where we're working in not-the-browser
-        if ($metadata || !magic || !magic.user) {
-          Promise.reject(new LocalError('Magic instance not available!', 500))
-          return
-        }
-        // check if we're logged in and fetch token with one call
-        // magic.user.isLoggedIn makes this same call anyway
         let token
         try {
           token = await magic.user.getIdToken()
@@ -57,14 +55,13 @@ export function useLogin(config: LoginProps = {}) {
           if (typeof redirect === 'string') {
             // eslint-disable-next-line no-console
             console.log('redirecting...')
-            // eslint-disable-next-line
-            debugger
             // if redirect string is provided and we're not logged in, cya!
             Router.push(redirect)
             return
           }
+          // this is a visible error but not a breaking error
           $setStatus(STATUS.NOT_FOUND)
-          Promise.reject(new LocalError('No token available.', 500))
+          $setError(new LocalError('No token available.', 500))
           return
         }
         // eslint-disable-next-line no-console
@@ -87,6 +84,7 @@ export function useLogin(config: LoginProps = {}) {
           // eslint-disable-next-line no-console
           console.warn('No user found.')
           $setStatus(STATUS.NOT_FOUND)
+          $setError(new LocalError('No user found.', 500))
           return
         }
         // eslint-disable-next-line no-console
