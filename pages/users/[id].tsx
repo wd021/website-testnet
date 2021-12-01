@@ -11,6 +11,7 @@ import FishAvatar from 'components/user/FishAvatar'
 import Flag from 'components/user/Flag'
 import Tabs, { TabType } from 'components/user/Tabs'
 import usePaginatedEvents from 'hooks/usePaginatedEvents'
+import { encode as btoa } from 'base-64'
 
 import * as API from 'apiClient'
 import { graffitiToColor, numberToOrdinal } from 'utils'
@@ -25,6 +26,14 @@ type Props = {
   allTimeMetrics: API.UserMetricsResponse
   weeklyMetrics: API.UserMetricsResponse
   metricsConfig: API.MetricsConfigResponse
+}
+type Redirectable = {
+  destination: string
+  permanent: boolean
+}
+
+type Redirect = {
+  redirect: Redirectable
 }
 
 function displayEventType(type: API.EventType): string {
@@ -44,53 +53,56 @@ function displayEventType(type: API.EventType): string {
   }
 }
 
-export const getServerSideProps: GetServerSideProps<Props> = async context => {
-  try {
-    if (typeof context.query.id !== 'string') {
-      return {
-        notFound: true,
-      }
-    }
-    const [user, events, allTimeMetrics, weeklyMetrics, metricsConfig] =
-      await Promise.all([
-        API.getUser(context.query.id),
-        API.listEvents({ userId: context.query.id, limit: EVENTS_LIMIT }),
-        API.getUserAllTimeMetrics(context.query.id),
-        API.getUserWeeklyMetrics(context.query.id),
-        API.getMetricsConfig(),
-      ])
-    // eslint-disable-next-line
-    const fUser = user as any
-    if (!fUser || (fUser && !fUser.id)) {
-      return { notFound: true }
-    }
-    if (
-      'error' in events ||
-      'error' in user ||
-      'error' in allTimeMetrics ||
-      'error' in weeklyMetrics ||
-      'error' in metricsConfig
-    ) {
-      return {
-        notFound: true,
-      }
-    }
-
-    return {
-      props: {
-        events: events,
-        user: user,
-        allTimeMetrics: allTimeMetrics,
-        weeklyMetrics: weeklyMetrics,
-        metricsConfig: metricsConfig,
+export const getServerSideProps: GetServerSideProps<Props | Redirect> =
+  async context => {
+    const failure = {
+      redirect: {
+        destination: `/leaderboard?${btoa('Unable to find that user')}`,
+        permanent: false,
       },
     }
-  } catch (e) {
-    // eslint-disable-next-line
-    console.warn(e)
-    return { notFound: true }
+    try {
+      if (typeof context.query.id !== 'string') {
+        return failure
+      }
+      const [user, events, allTimeMetrics, weeklyMetrics, metricsConfig] =
+        await Promise.all([
+          API.getUser(context.query.id),
+          API.listEvents({ userId: context.query.id, limit: EVENTS_LIMIT }),
+          API.getUserAllTimeMetrics(context.query.id),
+          API.getUserWeeklyMetrics(context.query.id),
+          API.getMetricsConfig(),
+        ])
+      // eslint-disable-next-line
+      const fUser = user as any
+      if (!fUser || (fUser && !fUser.id)) {
+        return failure
+      }
+      if (
+        'error' in events ||
+        'error' in user ||
+        'error' in allTimeMetrics ||
+        'error' in weeklyMetrics ||
+        'error' in metricsConfig
+      ) {
+        return failure
+      }
+
+      return {
+        props: {
+          events: events,
+          user: user,
+          allTimeMetrics: allTimeMetrics,
+          weeklyMetrics: weeklyMetrics,
+          metricsConfig: metricsConfig,
+        },
+      }
+    } catch (e) {
+      // eslint-disable-next-line
+      console.warn(e)
+      return failure
+    }
   }
-}
 
 export default function User({
   events,
