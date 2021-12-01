@@ -52,12 +52,17 @@ export function useLogin(config: LoginProps = {}) {
           Router.push(redirect)
           return
         }
+        if (!token) {
+          $setStatus(STATUS.NOT_FOUND)
+          $setError(new LocalError('No token available.', 500))
+          return
+        }
+        // eslint-disable-next-line no-console
+        console.log('has token!', token)
         const [magicMd, details] = await Promise.all([
           magic.user.getMetadata(),
           getUserDetails(token),
         ])
-        // eslint-disable-next-line no-console
-        console.log('has token!', token)
 
         if ('error' in details || details instanceof LocalError) {
           // eslint-disable-next-line no-console
