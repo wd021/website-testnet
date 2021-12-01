@@ -62,7 +62,9 @@ export function useLogin(config: LoginProps = {}) {
         const [magicMd, details] = await Promise.all([
           magic.user.getMetadata(),
           getUserDetails(token),
-        ])
+        ]).catch(e => {
+          throw e
+        })
 
         if ('error' in details || details instanceof LocalError) {
           // eslint-disable-next-line no-console
