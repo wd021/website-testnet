@@ -57,7 +57,7 @@ export const getServerSideProps: GetServerSideProps<Props | Redirect> =
   async context => {
     const failure = {
       redirect: {
-        destination: `/leaderboard?${btoa('Unable to find that user')}`,
+        destination: `/leaderboard?toast=${btoa('Unable to find that user')}`,
         permanent: false,
       },
     }
