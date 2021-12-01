@@ -16,7 +16,7 @@ import { LocalError } from './errors'
 // Environment variables set in Vercel config.
 const SERVER_API_URL = process.env.API_URL
 const SERVER_API_KEY = process.env.API_KEY
-const BROWSER_API_URL = process.env.NEXT_PUBLIC_API_URL
+const BROWSER_API_URL = process.env.NEXT_PUBLIC_STAGING_API_URL
 const BROWSER_API_KEY = process.env.NEXT_PUBLIC_API_KEY
 
 const API_URL = SERVER_API_URL || BROWSER_API_URL
