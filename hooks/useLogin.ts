@@ -33,14 +33,14 @@ export function useLogin(config: LoginProps = {}) {
   const [$metadata, $setMetadata] = useState<ApiUserMetadata | null>(null)
   useEffect(() => {
     const checkLoggedIn = async () => {
-      // eslint-disable-next-line no-console
-      console.log('starting check!')
-      // this is likely a case where we're working in not-the-browser
-      if ($metadata || !magic || !magic.user) {
-        Promise.reject(new LocalError('Magic instance not available!', 500))
-        return
-      }
       try {
+        // eslint-disable-next-line no-console
+        console.log('starting check!')
+        // this is likely a case where we're working in not-the-browser
+        if ($metadata || !magic || !magic.user) {
+          Promise.reject(new LocalError('Magic instance not available!', 500))
+          return
+        }
         let token
         try {
           token = await magic.user.getIdToken()
@@ -52,7 +52,7 @@ export function useLogin(config: LoginProps = {}) {
         if (!token) {
           // eslint-disable-next-line no-console
           console.log('NO TOKEN FOUND')
-          if (typeof redirect === 'string') {
+          if (redirect && typeof redirect === 'string') {
             // eslint-disable-next-line no-console
             console.log('redirecting...')
             // if redirect string is provided and we're not logged in, cya!
