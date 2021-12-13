@@ -15,6 +15,7 @@ import { countries, CountryWithCode } from 'data/countries'
 import { defaultErrorText } from 'utils/forms'
 import useDebounce from 'hooks/useDebounce'
 import { useField } from 'hooks/useForm'
+import { useRawQuery } from 'hooks/useQuery'
 import { useQueriedToast } from 'hooks/useToast'
 import { STATUS } from 'hooks/useLogin'
 import { LoginContext } from 'contexts/LoginContext'
@@ -62,12 +63,27 @@ const FIELDS = {
 }
 
 export default function Leaderboard({ users = [] }: Props) {
+  const { query: $queryCountry, setQuery: $setQueryCountry } =
+    useRawQuery('country')
+  const { query: $queryEventType, setQuery: $setQueryEventType } =
+    useRawQuery('event')
   const { visible: $visible, message: $toast } = useQueriedToast({
     queryString: 'toast',
     duration: 8e3,
   })
-  const $country = useField(FIELDS.country)
-  const $eventType = useField(FIELDS.eventType)
+  const $country = useField(
+    $queryCountry
+      ? { ...FIELDS.country, defaultValue: $queryCountry }
+      : FIELDS.country
+  )
+  const $eventType = useField(
+    $queryEventType
+      ? {
+          ...FIELDS.eventType,
+          defaultValue: $queryEventType,
+        }
+      : FIELDS.eventType
+  )
   const [$users, $setUsers] = useState(users)
 
   // Search field hooks
