@@ -455,6 +455,18 @@ exports[`renders User Settings page 1`] = `
                       All Time Stats
                     </div>
                   </button>
+                  <button
+                    class="text-black"
+                  >
+                    <div
+                      class="relative"
+                    >
+                      Settings
+                      <span
+                        class="absolute left-0 right-0 bottom-0 border-b border-black"
+                      />
+                    </div>
+                  </button>
                 </div>
                 <div
                   class="flex"
@@ -2439,6 +2451,15 @@ exports[`renders User Weekly page 1`] = `
                       class="relative"
                     >
                       All Time Stats
+                    </div>
+                  </button>
+                  <button
+                    class="text-ifsubtextgray"
+                  >
+                    <div
+                      class="relative"
+                    >
+                      Settings
                     </div>
                   </button>
                 </div>

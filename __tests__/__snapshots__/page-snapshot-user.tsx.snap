@@ -458,6 +458,15 @@ exports[`renders User Weekly page 1`] = `
                       All Time Stats
                     </div>
                   </button>
+                  <button
+                    class="text-ifsubtextgray"
+                  >
+                    <div
+                      class="relative"
+                    >
+                      Settings
+                    </div>
+                  </button>
                 </div>
                 <div
                   class="flex gap-3 mt-4 mb-12 flex-wrap"

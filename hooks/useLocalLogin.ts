@@ -1,11 +1,11 @@
 import { LoginContext, STATUS } from './useLogin'
 
 export const METADATA = {
-  id: 2,
+  id: 111,
   created_at: '2021-10-30T23:28:59.505Z',
   updated_at: '2021-10-30T23:43:28.555Z',
   email: 'cooldev@ironfish.network',
-  graffiti: 'smipplejipple',
+  graffiti: 'cooldev',
   total_points: 1100,
   country_code: 'USA',
   email_notifications: false,
