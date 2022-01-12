@@ -10,7 +10,7 @@ beforeEach(() => {
   fetch.mockResponse(mockUserPage)
 })
 
-it('renders User Settings page with no loginContext', async () => {
+it.skip('renders User Settings page with no loginContext', async () => {
   try {
     const WrappedUser = () => {
       const loginContext = useNoUser()
