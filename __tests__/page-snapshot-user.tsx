@@ -91,29 +91,30 @@ export const FIXTURE = {
   },
 }
 
-const goodResponse = {
-  status: 200,
-  headers: { 'Content-Type': 'application/json' },
+export const mockUserPage = async (req: Request) => {
+  const goodResponse = {
+    status: 200,
+    headers: { 'Content-Type': 'application/json' },
+  }
+  const matches = (x: string) => ~req.url.indexOf(x)
+  const endsWith = (x: string) => req.url.endsWith(x)
+  const body = endsWith('/users/111')
+    ? FIXTURE.user
+    : matches('/events?')
+    ? FIXTURE.events
+    : endsWith('granularity=lifetime')
+    ? FIXTURE.allTimeMetrics
+    : matches('/metrics?granularity=total')
+    ? FIXTURE.weeklyMetrics
+    : matches('/metrics/config')
+    ? FIXTURE.metricsConfig
+    : { error: "You haven't implemented this route yet" }
+  // console.log({ url: req.url, body, init: goodResponse })
+  return Promise.resolve({ body: JSON.stringify(body), init: goodResponse })
 }
 beforeEach(() => {
   fetch.resetMocks()
-  fetch.mockResponse(async (req: Request) => {
-    const matches = (x: string) => ~req.url.indexOf(x)
-    const endsWith = (x: string) => req.url.endsWith(x)
-    const body = endsWith('/users/111')
-      ? FIXTURE.user
-      : matches('/events?')
-      ? FIXTURE.events
-      : endsWith('granularity=lifetime')
-      ? FIXTURE.allTimeMetrics
-      : matches('/metrics?granularity=total')
-      ? FIXTURE.weeklyMetrics
-      : matches('/metrics/config')
-      ? FIXTURE.metricsConfig
-      : { error: "You haven't implemented this route yet" }
-    // console.log({ url: req.url, body, init: goodResponse })
-    return Promise.resolve({ body: JSON.stringify(body), init: goodResponse })
-  })
+  fetch.mockResponse(mockUserPage)
 })
 it('renders User Weekly page', async () => {
   try {

@@ -1,6 +1,7 @@
 import User from 'pages/users/[...details]'
 import { screen, waitForElementToBeRemoved } from '@testing-library/react'
-import { render } from 'jest.utils'
+import { useNoUser } from 'hooks/useLocalLogin'
+import { renderWithRouter } from 'jest.utils'
 import fetch from 'jest-fetch-mock'
 import { mockUserPage } from './page-snapshot-user'
 
@@ -9,9 +10,13 @@ beforeEach(() => {
   fetch.mockResponse(mockUserPage)
 })
 
-it('renders User Settings page', async () => {
+it('renders User Settings page with no loginContext', async () => {
   try {
-    const { container } = render(User, {
+    const WrappedUser = () => {
+      const loginContext = useNoUser()
+      return <User loginContext={loginContext} />
+    }
+    const { container } = renderWithRouter(<WrappedUser />, {
       router: {
         pathname: '/users/111/settings',
         route: '/users/111/settings',

@@ -34,4 +34,19 @@ export const useLocalLogin = (): LoginContext => ({
   },
 })
 
+export const useNoUser = (): LoginContext => ({
+  reloadUser: () => Promise.resolve(true),
+  checkLoggedIn: () => false,
+  checkLoading: () => false,
+  checkFailed: () => false,
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setError: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setStatus: () => {},
+  error: null,
+  status: STATUS.LOADED,
+  metadata: null,
+  magicMetadata: null,
+})
+
 export default useLocalLogin
