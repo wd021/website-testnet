@@ -5,9 +5,9 @@ import isAfter from 'date-fns/isAfter'
 import parseISO from 'date-fns/parseISO'
 import isDate from 'date-fns/isDate'
 
-import * as API from 'apiClient/index'
+import { EventType, ApiEvent, ApiEventMetadata } from 'apiClient/index'
 
-export function displayEventType(type: API.EventType): string {
+export function displayEventType(type: EventType): string {
   switch (type) {
     case 'BLOCK_MINED':
       return 'Mined a block'
@@ -25,29 +25,26 @@ export function displayEventType(type: API.EventType): string {
 }
 export type EventRowProps = {
   id: number
-  type: API.EventType
+  type: EventType
   occurred_at: string
   points: number
-  metadata?: API.ApiEventMetadata
+  metadata?: ApiEventMetadata
 }
 
-const makeLinkForEvent = (
-  type: API.EventType,
-  metadata?: API.ApiEventMetadata
-) => {
-  if (metadata && metadata.hash && type === API.EventType.BLOCK_MINED) {
+const makeLinkForEvent = (type: EventType, metadata?: ApiEventMetadata) => {
+  if (metadata && metadata.hash && type === EventType.BLOCK_MINED) {
     return `https://explorer.ironfish.network/blocks/${metadata.hash}`
   }
 }
 
 const summarizeEvent = (
-  type: API.EventType
-  // metadata?: API.ApiEventMetadata
+  type: EventType
+  // metadata?: ApiEventMetadata
 ) => {
-  if (type === API.EventType.BLOCK_MINED) {
+  if (type === EventType.BLOCK_MINED) {
     return 'View in the explorer'
     // return '...' + metadata.hash.slice(metadata.hash.length / 2, Infinity)
-  } else if (type === API.EventType.PULL_REQUEST_MERGED) {
+  } else if (type === EventType.PULL_REQUEST_MERGED) {
     return 'View pull request'
   }
 }
@@ -78,52 +75,58 @@ export const EventRow = ({
 
 type WeekRowProps = {
   date: Date
-  index: number
+  week: number
 }
 
-const WeekRow = ({ date, index }: WeekRowProps) => (
+const WeekRow = ({ date, week }: WeekRowProps) => (
   <tr className="bg-black text-white" data-date={date}>
     <td
       colSpan={4}
       className="text-center uppercase text-xs tracking-widest h-8"
     >
-      Week {index}
+      Week {week}
     </td>
   </tr>
 )
 
-const weeksSince = (x: Date) => {
+const weeksBetween = (start: Date, end: Date) => {
+  console.log('the weeks between: ', start, end)
+  if (isAfter(start, end)) {
+    throw new Error(
+      'Unable to create a valid week range, try weeksBetween(b, a) instead.'
+    )
+  }
   const weeks = []
-  // Date is stupid af -- let's make things 0 indexed most of the time, but not all the time
-  let current = new Date(x.getFullYear(), 0, 1, 0, 0, 0)
-  while (isBefore(current, x)) {
-    // eslint-disable-next-line no-console
+  const offset = addWeeks(start, -1)
+  let current = start
+  while (isAfter(current, offset) && isBefore(current, end)) {
     console.log({ current })
     weeks.push(current)
     current = addWeeks(current, 1)
   }
+  // eslint-disable-next-line no-console
+  console.log({ weeks })
   return weeks
 }
 
-const eventsWithin = (
-  a: Date,
-  b: Date,
-  events: API.ApiEvent[]
-): API.ApiEvent[] =>
+// type Predicate<T> = (x: T) => boolean
+
+const eventsBetween = (
+  start: Date,
+  end: Date,
+  events: ApiEvent[]
+): ApiEvent[] =>
   events.filter(e => {
-    const d = parseISO(e.occurred_at)
-    return isBefore(d, a) && isAfter(d, b)
+    const time = parseISO(e.occurred_at)
+    return isAfter(time, start) && isBefore(time, end)
   })
 
-const eventsBefore = (a: Date, events: API.ApiEvent[]): API.ApiEvent[] =>
+const eventsBefore = (a: Date, events: ApiEvent[]): ApiEvent[] =>
   events.filter(e => isBefore(parseISO(e.occurred_at), a))
 
-const makeCounter = (total: number) => {
-  let x = -1
-  return () => {
-    x++
-    return total - x
-  }
+const makeCounter = () => {
+  let x = 0
+  return () => ++x
 }
 
 type DatedIndex = {
@@ -131,50 +134,44 @@ type DatedIndex = {
   index: number
 }
 
-const sortByDate = (xs: API.ApiEvent[]) =>
-  xs.sort((a: API.ApiEvent, b: API.ApiEvent): number =>
+const sortEventsByDate = (xs: ApiEvent[]) =>
+  xs.sort((a: ApiEvent, b: ApiEvent): number =>
     a.occurred_at > b.occurred_at ? 1 : -1
   )
 
-type EventContainer = {
-  events: API.ApiEvent[]
+type WeeklyData = {
+  week: number
+  date: Date
+  events: ApiEvent[]
 }
 
-export const renderEvents = (events: API.ApiEvent[]) => {
-  const weeksThisYear = weeksSince(new Date()).reverse()
-  const counter = makeCounter(weeksThisYear.length)
-  // this logic is all fucked up, deal with it tomorrow
+export const renderEvents = (start: Date, rawEvents: ApiEvent[]) => {
+  const now = new Date()
+  const weeksThisYear = weeksBetween(start, now)
+  const counter = makeCounter()
   return (
     weeksThisYear
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      .reduce((agg: any, week: Date) => {
+      .reduce((agg: any, date: Date) => {
         const prev = agg[agg.length - 1]
-        // eslint-disable-next-line no-console
-        console.log({ prev, week })
-        const raw = isDate(prev)
-          ? eventsWithin(week, prev, events)
-          : eventsBefore(weeksThisYear[1], events)
-        const ev = sortByDate(raw)
-        return [...agg, { events: ev }, { date: week, index: counter() }]
+        return agg.concat({
+          date,
+          events: sortEventsByDate(
+            eventsBetween(prev ? prev.date : start, date, rawEvents)
+          ),
+          week: counter(),
+        })
       }, [])
-      .reverse()
-      .map((x: DatedIndex | EventContainer, ix: number) => {
-        if ('date' in x) {
-          return <WeekRow key={'' + x.date} {...x} />
-        }
-        if ('events' in x && x.events.length) {
-          return (
+      .map(({ date, week, events }: WeeklyData) => {
+        return (
+          events.length > 0 && (
             <>
-              {x.events.map((e: API.ApiEvent) => (
+              <WeekRow key={'' + date} week={week} date={date} />
+              {events.map((e: ApiEvent) => (
                 <EventRow {...e} key={e.id} />
               ))}
             </>
           )
-        }
-        return (
-          <tr className="block py-2" key={'' + ix}>
-            <td colSpan={4}>No activity for this week</td>
-          </tr>
         )
       })
   )
