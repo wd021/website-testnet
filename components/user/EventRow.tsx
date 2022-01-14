@@ -3,7 +3,7 @@ import addWeeks from 'date-fns/addWeeks'
 import isBefore from 'date-fns/isBefore'
 import isAfter from 'date-fns/isAfter'
 import parseISO from 'date-fns/parseISO'
-import isDate from 'date-fns/isDate'
+// import isDate from 'date-fns/isDate'
 
 import { EventType, ApiEvent, ApiEventMetadata } from 'apiClient/index'
 
@@ -90,7 +90,6 @@ const WeekRow = ({ date, week }: WeekRowProps) => (
 )
 
 const weeksBetween = (start: Date, end: Date) => {
-  console.log('the weeks between: ', start, end)
   if (isAfter(start, end)) {
     throw new Error(
       'Unable to create a valid week range, try weeksBetween(b, a) instead.'
@@ -100,12 +99,9 @@ const weeksBetween = (start: Date, end: Date) => {
   const offset = addWeeks(start, -1)
   let current = start
   while (isAfter(current, offset) && isBefore(current, end)) {
-    console.log({ current })
     weeks.push(current)
     current = addWeeks(current, 1)
   }
-  // eslint-disable-next-line no-console
-  console.log({ weeks })
   return weeks
 }
 
@@ -121,17 +117,12 @@ const eventsBetween = (
     return isAfter(time, start) && isBefore(time, end)
   })
 
-const eventsBefore = (a: Date, events: ApiEvent[]): ApiEvent[] =>
-  events.filter(e => isBefore(parseISO(e.occurred_at), a))
+// const eventsBefore = (a: Date, events: ApiEvent[]): ApiEvent[] =>
+//   events.filter(e => isBefore(parseISO(e.occurred_at), a))
 
 const makeCounter = () => {
   let x = 0
   return () => ++x
-}
-
-type DatedIndex = {
-  date: Date
-  index: number
 }
 
 const sortEventsByDate = (xs: ApiEvent[]) =>
