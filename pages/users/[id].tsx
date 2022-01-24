@@ -198,7 +198,9 @@ export default function User({ loginContext }: Props) {
               {/* Recent Activity */}
               {$activeTab !== 'settings' && (
                 <>
-                  <h1 className="font-favorit">Recent Activity</h1>
+                  <h1 className="font-favorit" id="recent-activity">
+                    Recent Activity
+                  </h1>
 
                   <table className="font-favorit w-full">
                     <thead>
