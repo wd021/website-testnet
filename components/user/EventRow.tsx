@@ -1,4 +1,4 @@
-import { Element, Fragment, ReactType } from 'react'
+import { Fragment, ReactElement } from 'react'
 import useClipboard from 'react-use-clipboard'
 import {
   format,
@@ -12,10 +12,16 @@ import ActivityBlockMined from 'components/icons/ActivityBlockMined'
 import ActivityBugReported from 'components/icons/ActivityBugReport'
 import ActivityPullRequest from 'components/icons/ActivityPullRequest'
 import ActivityCopy from 'components/icons/ActivityCopy'
+import ActivityCommunityContribution from 'components/icons/ActivityCommunityContribution'
+import ActivitySocial from 'components/icons/ActivitySocial'
 
 import { EventType, ApiEvent, ApiEventMetadata } from 'apiClient/index'
-const NEEDS_ICON = '🤨'
-export function displayEventType(type: EventType): Element {
+// const NEEDS_ICON = '🤨'
+interface IconText {
+  icon: ReactElement
+  text: string
+}
+export function displayEventType(type: EventType): IconText {
   const text =
     type === 'BLOCK_MINED'
       ? 'Mined a block'
@@ -34,20 +40,15 @@ export function displayEventType(type: EventType): Element {
     ) : type === 'BUG_CAUGHT' ? (
       <ActivityBugReported />
     ) : type === 'COMMUNITY_CONTRIBUTION' ? (
-      NEEDS_ICON
+      <ActivityCommunityContribution />
     ) : type === 'PULL_REQUEST_MERGED' ? (
       <ActivityPullRequest />
     ) : type === 'SOCIAL_MEDIA_PROMOTION' ? (
-      NEEDS_ICON
+      <ActivitySocial />
     ) : (
       type
     )
-  return (
-    <div className="flex items-center justify-start">
-      <span className="mr-2">{icon}</span>
-      {text}
-    </div>
-  )
+  return { icon, text }
 }
 export type EventRowProps = {
   id: number
@@ -65,13 +66,17 @@ const makeLinkForEvent = (type: EventType, metadata?: ApiEventMetadata) => {
 
 type CopyableHashProps = {
   hash: string
-  children: Element
 }
 
-const CopyableHash = ({ hash, children }: CopyableHashProps) => {
+const CopyableHash = ({ hash }: CopyableHashProps) => {
   const [, setCopied] = useClipboard(hash, {
     successDuration: 1000,
   })
+  const hashLength = hash.length
+  const abbrevHash = hash.slice(
+    hashLength - Math.round(hashLength / 4),
+    Infinity
+  )
   return (
     <div
       onClick={e => {
@@ -80,7 +85,10 @@ const CopyableHash = ({ hash, children }: CopyableHashProps) => {
       }}
       className="flex items-center justify-center"
     >
-      {children}
+      <>
+        Block &hellip; {abbrevHash}
+        <ActivityCopy className="ml-1" />
+      </>
     </div>
   )
 }
@@ -88,24 +96,21 @@ const CopyableHash = ({ hash, children }: CopyableHashProps) => {
 const summarizeEvent = (
   type: EventType,
   metadata: ApiEventMetadata
-): Element => {
+): ReactElement => {
   if (type === EventType.BLOCK_MINED) {
     // return 'View in the explorer'
     const { hash } = metadata
-    const hashLength = hash.length
-    return (
-      <CopyableHash hash={hash}>
-        <>
-          Block &hellip;{' '}
-          {hash.slice(hashLength - Math.round(hashLength / 4), Infinity)}
-          <ActivityCopy className="ml-1" />
-        </>
-      </CopyableHash>
-    )
+    return <CopyableHash hash={hash} />
   } else if (type === EventType.PULL_REQUEST_MERGED) {
     return <>View pull request</>
+  } else if (type === EventType.BUG_CAUGHT) {
+    return <>Bug ??? on Github</>
+  } else if (type === EventType.COMMUNITY_CONTRIBUTION) {
+    return <>View contribution</>
+  } else if (type === EventType.SOCIAL_MEDIA_PROMOTION) {
+    return <>Promoted on ???</>
   }
-  return <>UNHANDLED TYPE</>
+  return <>UNHANDLED: {type}</>
 }
 
 const formatEventDate = (d: Date) =>
@@ -119,9 +124,18 @@ export const EventRow = ({
   points,
   metadata,
 }: EventRowProps) => {
+  const { text, icon } = displayEventType(type)
+
+  const eType = (
+    <div className="flex items-center justify-start">
+      <span className="mr-2">{icon}</span>
+      {text}
+    </div>
+  )
+
   return (
     <tr className="border-b border-black">
-      <td className="py-4">{displayEventType(type)}</td>
+      <td className="py-4">{eType}</td>
       <td>{formatEventDate(new Date(occurredAt))}</td>
       <td>{points}</td>
       <td>
@@ -129,7 +143,7 @@ export const EventRow = ({
           href={makeLinkForEvent(type, metadata)}
           className="text-iflightblue border-b-ifblue flex"
         >
-          {summarizeEvent(type, metadata)}
+          {metadata && summarizeEvent(type, metadata)}
         </a>
       </td>
     </tr>
