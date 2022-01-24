@@ -15,7 +15,13 @@ import ActivityCopy from 'components/icons/ActivityCopy'
 import ActivityCommunityContribution from 'components/icons/ActivityCommunityContribution'
 import ActivitySocial from 'components/icons/ActivitySocial'
 
-import { EventType, ApiEvent, ApiEventMetadata } from 'apiClient/index'
+import {
+  EventType,
+  ApiEvent,
+  ApiEventMetadata,
+  ApiEventMetadataBlockMined,
+  ApiEventMetadataWithLink,
+} from 'apiClient/index'
 // const NEEDS_ICON = '🤨'
 interface IconText {
   icon: ReactElement
@@ -59,9 +65,11 @@ export type EventRowProps = {
 }
 
 const makeLinkForEvent = (type: EventType, metadata?: ApiEventMetadata) => {
-  if (metadata && metadata.hash && type === EventType.BLOCK_MINED) {
+  if (!metadata) return ''
+  if ('hash' in metadata && type === EventType.BLOCK_MINED) {
     return `https://explorer.ironfish.network/blocks/${metadata.hash}`
   }
+  return (metadata as ApiEventMetadataWithLink).url
 }
 
 type CopyableHashProps = {
@@ -99,16 +107,24 @@ const summarizeEvent = (
 ): ReactElement => {
   if (type === EventType.BLOCK_MINED) {
     // return 'View in the explorer'
-    const { hash } = metadata
+    const { hash } = metadata as ApiEventMetadataBlockMined
     return <CopyableHash hash={hash} />
-  } else if (type === EventType.PULL_REQUEST_MERGED) {
-    return <>View pull request</>
+  }
+  const { url } = metadata as ApiEventMetadataWithLink
+  const link = new URL(url)
+  const { pathname, hostname } = link
+  const parts = pathname.split('/')
+  const id = parts.slice(-1)[0]
+  if (type === EventType.PULL_REQUEST_MERGED) {
+    // https://github.com/iron-fish/ironfish-api/pull/595
+    return <>View pull request #{id}</>
   } else if (type === EventType.BUG_CAUGHT) {
-    return <>Bug ??? on Github</>
+    // https://github.com/iron-fish/ironfish/issues/930
+    return <>View issue #{id}</>
   } else if (type === EventType.COMMUNITY_CONTRIBUTION) {
     return <>View contribution</>
   } else if (type === EventType.SOCIAL_MEDIA_PROMOTION) {
-    return <>Promoted on ???</>
+    return <>Promoted on {hostname}</>
   }
   return <>UNHANDLED: {type}</>
 }

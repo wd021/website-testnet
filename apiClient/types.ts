@@ -1,4 +1,4 @@
-export type ApiEventMetadata = {
+export type ApiEventMetadataBlockMined = {
   difficulty: number
   graffiti: string
   hash: string
@@ -11,6 +11,14 @@ export type ApiEventMetadata = {
   time_since_last_block_ms: number
   transactions_count: number
 }
+
+export type ApiEventMetadataWithLink = {
+  url: string
+}
+
+export type ApiEventMetadata =
+  | ApiEventMetadataWithLink
+  | ApiEventMetadataBlockMined
 
 export type ApiEvent = {
   id: number
